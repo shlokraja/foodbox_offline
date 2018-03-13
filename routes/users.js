@@ -359,7 +359,7 @@ router.get('/getSalesDetails', function (req, res, next) {
                 var arrObj = reconcile_details[i];
                 if (sales_details != undefined) {
                     for (var index = 0; index < sales_details.length; index++) {
-                        if (sales_details[index].po_id == reconcile_details[i].po_id && sales_details[index].food_item_id == reconcile_details[i].food_item_id) {
+                        if ( sales_details[index] && sales_details[index].po_id == reconcile_details[i].po_id && sales_details[index].food_item_id == reconcile_details[i].food_item_id) {
                             arrObj = merge_object(reconcile_details[i], sales_details[index]);
                         }
                     }

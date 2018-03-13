@@ -26,6 +26,7 @@ var OrderItemModel = require("../models/OrderItemModel");
 var CashDetailModel = require("../models/CashDetailModel");
 var offline_incomming_po = require('../misc/offline_incomming_po');
 var cashdetails = require("../misc/cashdetails");
+var ping = require('ping');
 format.extend(String.prototype);
 // Initiating the redisClient
 var redisClient = redis.createClient({
@@ -38,6 +39,17 @@ redisClient.on('error', function (msg) {
     console.error(msg);
 });
 
+router.get('/checkInternet',function(req,res,next)
+{
+	var hosts = ['google.com'];
+	hosts.forEach(function(host){
+    		ping.sys.probe(host, function(isAlive){
+        		var msg = isAlive ? 'host ' + host + ' is alive' : 'host ' + host + ' is dead';
+        		console.log(msg);
+			res.send(isAlive);
+    		});
+	});
+});
 
 // Routes coming from the outlet app itself
 // This gets the test mode flag from the outlet dash and passes it down
@@ -100,13 +112,13 @@ router.post('/test_mode_preprint', function (req, res, next) {
     var TEST_MODE_TIME_URL = '/outlet/test_mode_time/';
     var outlet_id = process.env.OUTLET_ID;
     requestretry({
-            url: hq_url + TEST_MODE_TIME_URL + outlet_id,
-            method: "POST",
-            forever: true,
-            json: {
-                "start": flag
-            }
-        },
+        url: hq_url + TEST_MODE_TIME_URL + outlet_id,
+        method: "POST",
+        forever: true,
+        json: {
+            "start": flag
+        }
+    },
         function (error, response, body) {
             if (error || (response && response.statusCode != 200)) {
                 console.error('{}: {} {}'.format(hq_url, error, body));
@@ -153,9 +165,9 @@ function ClearTestMode() {
                 }
             });
             internetAvailable({
-                    timeout: 1000,
-                    retries: 3,
-                })
+                timeout: 1000,
+                retries: 3,
+            })
                 .then(function () {
                     requestretry({
                         url: hq_url + TEST_MODE_TIME_URL + outlet_id,
@@ -210,19 +222,19 @@ router.post('/test_mode_issue', function (req, res, next) {
     var TEST_MODE_ISSUES_URL = '/outlet/test_mode_issue/';
     var outlet_id = process.env.OUTLET_ID;
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             requestretry({
-                    url: hq_url + TEST_MODE_ISSUES_URL + outlet_id,
-                    method: "POST",
-                    timeout: 5000,
-                    json: {
-                        "text": issue_text,
-                        "userid": loggedinuserid
-                    }
-                },
+                url: hq_url + TEST_MODE_ISSUES_URL + outlet_id,
+                method: "POST",
+                timeout: 5000,
+                json: {
+                    "text": issue_text,
+                    "userid": loggedinuserid
+                }
+            },
                 function (error, response, body) {
                     if (error || (response && response.statusCode != 200)) {
                         console.error('{}: {} {}'.format(hq_url, error, body));
@@ -438,9 +450,9 @@ router.post('/signal_expiry_item_removal', function (req, res, next) {
         // changes done by peerbits
         // 06-Aug-2017
         internetAvailable({
-                timeout: 1000,
-                retries: 3,
-            })
+            timeout: 1000,
+            retries: 3,
+        })
             .then(function () {
                 requestretry({
                     url: REMOVE_EXPIRED_URL,
@@ -587,9 +599,9 @@ router.post('/store_loading_issue_items', function (req, res, next) {
     var hq_url = process.env.HQ_URL;
     var STORE_LOADING_ISSUE_ITEMS_URL = hq_url + '/outlet/report_loading_issue/' + process.env.OUTLET_ID;
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             // requestretry({
             //     url: STORE_LOADING_ISSUE_ITEMS_URL,
@@ -622,8 +634,8 @@ router.post('/store_loading_issue_items', function (req, res, next) {
             // });
 
             request(STORE_LOADING_ISSUE_ITEMS_URL, {
-                    timeout: 1500
-                },
+                timeout: 1500
+            },
                 function (error, response, body) {
                     if (error || (response && response.statusCode != 200)) {
                         console.error('{}: {} {}'.format(hq_url, error, body));
@@ -782,9 +794,9 @@ router.post('/start_of_day_signal', function (req, res, next) {
     var hq_url = process.env.HQ_URL;
     var SUPPLIES_STATUS_URL = hq_url + '/outlet/supplies_status?phase=start_of_day';
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             requestretry({
                 url: SUPPLIES_STATUS_URL,
@@ -966,14 +978,14 @@ router.post('/mobile_pending_orders', function (req, res, next) {
     var referenceno = req.body.referenceno;
 
     request({
-            url: hq_url + MOBILE_PENDING_URL,
-            method: "POST",
-            json: {
-                "referenceno": referenceno,
-                "mobileno": mobileno,
-                "outletid": outletid
-            }
-        },
+        url: hq_url + MOBILE_PENDING_URL,
+        method: "POST",
+        json: {
+            "referenceno": referenceno,
+            "mobileno": mobileno,
+            "outletid": outletid
+        }
+    },
         function (error, response, body) {
             if (error || (response && response.statusCode != 200)) {
                 console.error('{}: {} {}'.format(hq_url, error, body));
@@ -989,9 +1001,9 @@ function outlet_register(phases, isautomaticEOD) {
     var hq_url = process.env.HQ_URL;
     var OUTLET_REGISTER_URL = hq_url + '/outlet_mobile/outlet_register_status';
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             request({
                 url: OUTLET_REGISTER_URL,
@@ -1049,9 +1061,9 @@ router.post('/automatic_sod_24hr_outlet', function (req, res, next) {
     var hq_url = process.env.HQ_URL;
     var OUTLET_REGISTER_URL = hq_url + '/outlet_mobile/automatic_sod_24hr_outlet';
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             request({
                 url: OUTLET_REGISTER_URL,
@@ -1122,9 +1134,9 @@ router.post('/end_of_day_signal', function (req, res, next) {
     outlet_register("eod", isautomaticEOD);
     var checkinterneronline = true;
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             var hq_url = process.env.HQ_URL;
             var SUPPLIES_STATUS_URL = hq_url + '/outlet/supplies_status?phase=end_of_day';
@@ -1202,7 +1214,7 @@ router.post('/end_of_day_signal', function (req, res, next) {
                         return;
                     }
                 });
-                
+
                 redisClient.del(helper.reconcile_summary_node, true, function (sod_err, sod_reply) {
                     if (sod_err) {
                         console.error("error while setting sod in redis- {}".format(sod_err));
@@ -1281,7 +1293,7 @@ router.post('/end_of_day_signal', function (req, res, next) {
                         }
                     });
                 });
-		 // start clearing summary queue
+                // start clearing summary queue
                 redisClient.del(helper.reconcile_summary_node, true, function (sod_err, sod_reply) {
                     if (sod_err) {
                         console.error("error while setting sod in redis- {}".format(sod_err));
@@ -1307,7 +1319,7 @@ router.post('/end_of_day_signal', function (req, res, next) {
                     }
                     res.send('success');
                 });
-               
+
             });
         });
 });
@@ -1377,9 +1389,9 @@ router.post('/expire_all_items', function (req, res, next) {
             io.emit(helper.stock_count_node, parsed_response);
             io.sockets.emit(helper.stock_count_node, parsed_response);
             internetAvailable({
-                    timeout: 1000,
-                    retries: 3,
-                })
+                timeout: 1000,
+                retries: 3,
+            })
                 .then(function () {
                     // Put the data in firebase
                     var rootref = new firebase(process.env.FIREBASE_CONN);
@@ -1476,9 +1488,9 @@ router.post('/store_last_load_info', function (req, res, next) {
             */
     /*inherited  from indras function*/
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             console.log("AutomaticReconcile function :: IncomingPOProcess:: function end  ################################################### reconcile_items:: " + JSON.stringify(reconcile_items));
             requestretry({
@@ -1636,9 +1648,9 @@ router.get('/food_item_issues', function (req, res, next) {
     //     });
 
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
 
             searchFoodIssueDocument(time, function (err, reply2) {
@@ -1652,8 +1664,8 @@ router.get('/food_item_issues', function (req, res, next) {
                     res.send(reply2);
                 } else {
                     request(hq_url + GET_FOOD_ITEM_ISSUES_URL + outlet_id + '?time=' + time, {
-                            timeout: 1500
-                        },
+                        timeout: 1500
+                    },
                         function (error, response, body) {
                             if (error || (response && response.statusCode != 200)) {
                                 console.error('{}: {} {}'.format(hq_url, error, body));
@@ -1754,17 +1766,17 @@ router.get('/non_food_item_issues', function (req, res, next) {
     console.log('##############################');
 
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             searchNonFoodIssueDocument(time, function (err, reply2) {
                 if (reply2 != null || typeof reply2 != "undefined") {
                     res.send(JSON.parse(reply2));
                 } else {
                     request(hq_url + GET_NONFOOD_ITEM_ISSUES_URL + outlet_id + '?time=' + time, {
-                            maxAttempts: 5
-                        },
+                        maxAttempts: 5
+                    },
                         function (error, response, body) {
                             if (error || (response && response.statusCode != 200)) {
                                 console.error('{}: {} {}'.format(hq_url, error, body));
@@ -1816,16 +1828,16 @@ router.get('/food_item_list', function (req, res, next) {
     async.parallel({
         food_item_list: function (callback) {
             internetAvailable({
-                    timeout: 1000,
-                    retries: 3,
-                })
+                timeout: 1000,
+                retries: 3,
+            })
                 .then(function () {
                     var hq_url = process.env.HQ_URL;
                     var GET_FOOD_ITEM_LIST_URL = '/outlet/food_item_list/';
                     var outlet_id = process.env.OUTLET_ID;
                     request(hq_url + GET_FOOD_ITEM_LIST_URL + outlet_id, {
-                            timeout: 1500
-                        },
+                        timeout: 1500
+                    },
                         function (error, response, body) {
                             console.log('************************************************');
                             console.log('error', error);
@@ -1867,16 +1879,16 @@ router.get('/food_item_list', function (req, res, next) {
         },
         non_food_types: function (callback) {
             internetAvailable({
-                    timeout: 1000,
-                    retries: 3,
-                })
+                timeout: 1000,
+                retries: 3,
+            })
                 .then(function () {
                     var hq_url = process.env.HQ_URL;
                     var GET_NON_FOOD_TYPES_URL = '/outlet/non_food_types';
 
                     request(hq_url + GET_NON_FOOD_TYPES_URL, {
-                            timeout: 1500
-                        },
+                        timeout: 1500
+                    },
                         function (error, response, body) {
                             console.log('************************************************');
                             console.log('error', error);
@@ -1938,9 +1950,9 @@ router.post('/update_item_issues', function (req, res, next) {
     var non_food_issue = req.body.non_food_issue;
 
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             is_set_on_HQ = true;
 
@@ -2104,9 +2116,9 @@ router.get('/get_sales_info_cashcard', function (req, res, next) {
     console.log("get_sales_info_cashcard :=", hq_url + AMOUNT_SOLD_CASHCARD_URL + outlet_id);
     today = new Date().toISOString().slice(0, 10);
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             console.log("get_sales_info_cashcard :=", hq_url + AMOUNT_SOLD_CASHCARD_URL + outlet_id);
 
@@ -2121,8 +2133,8 @@ router.get('/get_sales_info_cashcard', function (req, res, next) {
                     return;
                 } else {
                     request(hq_url + AMOUNT_SOLD_CASHCARD_URL + outlet_id, {
-                            timeout: 10000
-                        },
+                        timeout: 10000
+                    },
                         function (error, response, body) {
                             if (error || (response && response.statusCode != 200)) {
                                 search_cashdetail(today, function (error, reply) {
@@ -2278,133 +2290,133 @@ function saveCashDetail(body, set_to_HQ, callback) {
 router.get('/get_sales_info', function (req, res, next) {
     // Doing an async parallel call to get the different infos
     async.parallel({
-            amount_sold_cash: function (callback) {
-                // This is the amount given to them at the start of the month
-                var AMOUNT_SOLD_CASH_URL = '/outlet/amount_for_month/' + process.env.OUTLET_ID;
-                console.log("amount_sold_cash url:-", process.env.HQ_URL + AMOUNT_SOLD_CASH_URL);
-                internetAvailable({
-                    timeout: 1000,
-                    retries: 3,
-                }).then(function () {
-                    request(process.env.HQ_URL + AMOUNT_SOLD_CASH_URL, {
-                            timeout: 1500
-                        },
-                        function (error, response, body) {
-                            if (error || (response && response.statusCode != 200)) {
-                                //callback('{}: {} {}'.format(process.env.HQ_URL, error, body), null);
-                                redisClient.get(helper.outlet_config_node, function (error, reply) {
-                                    if (error) {
-                                        callback(null, {
-                                            "sum": 0
-                                        });
-                                    } else {
-                                        outlet_config = JSON.parse(reply);
-                                        ammout = outlet_config.cash_at_start;
-                                        callback(null, {
-                                            "sum": ammout
-                                        });
-                                    }
-
-                                });
-                                return;
-                            } else {
-                                if (!body) {
+        amount_sold_cash: function (callback) {
+            // This is the amount given to them at the start of the month
+            var AMOUNT_SOLD_CASH_URL = '/outlet/amount_for_month/' + process.env.OUTLET_ID;
+            console.log("amount_sold_cash url:-", process.env.HQ_URL + AMOUNT_SOLD_CASH_URL);
+            internetAvailable({
+                timeout: 1000,
+                retries: 3,
+            }).then(function () {
+                request(process.env.HQ_URL + AMOUNT_SOLD_CASH_URL, {
+                    timeout: 1500
+                },
+                    function (error, response, body) {
+                        if (error || (response && response.statusCode != 200)) {
+                            //callback('{}: {} {}'.format(process.env.HQ_URL, error, body), null);
+                            redisClient.get(helper.outlet_config_node, function (error, reply) {
+                                if (error) {
                                     callback(null, {
                                         "sum": 0
                                     });
                                 } else {
-                                    callback(null, JSON.parse(body));
+                                    outlet_config = JSON.parse(reply);
+                                    ammout = outlet_config.cash_at_start;
+                                    callback(null, {
+                                        "sum": ammout
+                                    });
                                 }
+
+                            });
+                            return;
+                        } else {
+                            if (!body) {
+                                callback(null, {
+                                    "sum": 0
+                                });
+                            } else {
+                                callback(null, JSON.parse(body));
                             }
+                        }
+                    });
+            }).catch(function () {
+                redisClient.get(helper.outlet_config_node, function (error, reply) {
+                    if (error) {
+                        callback(null, {
+                            "sum": 0
                         });
-                }).catch(function () {
-                    redisClient.get(helper.outlet_config_node, function (error, reply) {
-                        if (error) {
-                            callback(null, {
-                                "sum": 0
-                            });
-                        } else {
-                            outlet_config = JSON.parse(reply);
-                            ammout = outlet_config.cash_at_start;
-                            callback(null, {
-                                "sum": ammout
-                            });
-                        }
-
-                    });
-                });
-
-            },
-            amount_sold_cashcard: function (callback) {
-                // This is the amount given to them at the start of the month
-                var AMOUNT_SOLD_CASHCARD_URL = '/outlet/getcashcard_sales_daymonth/' + process.env.OUTLET_ID;
-                console.log("AMOUNT_SOLD_CASHCARD_URL :-", AMOUNT_SOLD_CASHCARD_URL);
-                request(process.env.HQ_URL + AMOUNT_SOLD_CASHCARD_URL, {
-                        timeout: 1500
-                    },
-                    function (error, response, body) {
-                        if (error || (response && response.statusCode != 200)) {
-                            // callback('{}: {} {}'.format(process.env.HQ_URL, error, body), null);
-                            callback(null, {
-                                "sum": 0
-                            });
-                            return;
-                        }
-                        if (!body) {
-                            callback(null, {
-                                "sum": 0
-                            });
-                        } else {
-                            callback(null, JSON.parse(body));
-                        }
-                    });
-            },
-            amount_sold_pettycash: function (callback) {
-                // This is the amount sold in petty cash for that month
-                var AMOUNT_SOLD_PETTY_CASH_URL = '/outlet/amount_sold_pettycash/' + process.env.OUTLET_ID;
-                request(process.env.HQ_URL + AMOUNT_SOLD_PETTY_CASH_URL, {
-                        timeout: 1500
-                    },
-                    function (error, response, body) {
-                        if (error || (response && response.statusCode != 200)) {
-                            //callback('{}: {} {}'.format(process.env.HQ_URL, error, body), null);
-                            callback(null, {
-                                "sum": 0
-                            });
-                            return;
-                        }
-                        if (!body) {
-                            callback(null, {
-                                "sum": 0
-                            });
-                        } else {
-                            callback(null, JSON.parse(body));
-                        }
-                    });
-            },
-            dataforpeetycashonlocal: function (callback) {
-                redisClient.get(helper.petty_cash_node, function (error, reply) {
-                    if (reply != null) {
-                        reply = JSON.parse(reply);
-                        callback(null, reply);
-                        return;
                     } else {
-                        callback(null, []);
-                        return;
+                        outlet_config = JSON.parse(reply);
+                        ammout = outlet_config.cash_at_start;
+                        callback(null, {
+                            "sum": ammout
+                        });
                     }
 
-                })
-            },
-            petty_cash_to_HQ_node: function (callback) {
-                redisClient.lrange(helper.petty_cash_to_HQ_node, 0, -1, function (error, reply) {
-                    if (reply != null) {
-                        callback(error, reply);
-                    } else {
-                        callback(null, []);
-                    }
                 });
-            }
+            });
+
         },
+        amount_sold_cashcard: function (callback) {
+            // This is the amount given to them at the start of the month
+            var AMOUNT_SOLD_CASHCARD_URL = '/outlet/getcashcard_sales_daymonth/' + process.env.OUTLET_ID;
+            console.log("AMOUNT_SOLD_CASHCARD_URL :-", AMOUNT_SOLD_CASHCARD_URL);
+            request(process.env.HQ_URL + AMOUNT_SOLD_CASHCARD_URL, {
+                timeout: 1500
+            },
+                function (error, response, body) {
+                    if (error || (response && response.statusCode != 200)) {
+                        // callback('{}: {} {}'.format(process.env.HQ_URL, error, body), null);
+                        callback(null, {
+                            "sum": 0
+                        });
+                        return;
+                    }
+                    if (!body) {
+                        callback(null, {
+                            "sum": 0
+                        });
+                    } else {
+                        callback(null, JSON.parse(body));
+                    }
+                });
+        },
+        amount_sold_pettycash: function (callback) {
+            // This is the amount sold in petty cash for that month
+            var AMOUNT_SOLD_PETTY_CASH_URL = '/outlet/amount_sold_pettycash/' + process.env.OUTLET_ID;
+            request(process.env.HQ_URL + AMOUNT_SOLD_PETTY_CASH_URL, {
+                timeout: 1500
+            },
+                function (error, response, body) {
+                    if (error || (response && response.statusCode != 200)) {
+                        //callback('{}: {} {}'.format(process.env.HQ_URL, error, body), null);
+                        callback(null, {
+                            "sum": 0
+                        });
+                        return;
+                    }
+                    if (!body) {
+                        callback(null, {
+                            "sum": 0
+                        });
+                    } else {
+                        callback(null, JSON.parse(body));
+                    }
+                });
+        },
+        dataforpeetycashonlocal: function (callback) {
+            redisClient.get(helper.petty_cash_node, function (error, reply) {
+                if (reply != null) {
+                    reply = JSON.parse(reply);
+                    callback(null, reply);
+                    return;
+                } else {
+                    callback(null, []);
+                    return;
+                }
+
+            })
+        },
+        petty_cash_to_HQ_node: function (callback) {
+            redisClient.lrange(helper.petty_cash_to_HQ_node, 0, -1, function (error, reply) {
+                if (reply != null) {
+                    callback(error, reply);
+                } else {
+                    callback(null, []);
+                }
+            });
+        }
+    },
         function (err, results) {
 
             if (err) {
@@ -2443,8 +2455,8 @@ router.get('/get_live_pos', function (req, res, next) {
     var UPDATE_ITEM_ISSUES_URL = '/outlet/get_live_pos/';
     var outlet_id = process.env.OUTLET_ID;
     request(hq_url + UPDATE_ITEM_ISSUES_URL + outlet_id, {
-            forever: true
-        },
+        forever: true
+    },
         function (error, response, body) {
             if (error || (response && response.statusCode != 200)) {
                 console.error('{}: {} {}'.format(hq_url, error, body));
@@ -2521,18 +2533,18 @@ router.post('/petty_expenditure', function (req, res, next) {
     var outlet_id = process.env.OUTLET_ID;
 
     internetAvailable({
-            timeout: 1000,
-            retries: 1,
-        })
+        timeout: 1000,
+        retries: 1,
+    })
         .then(function () {
             requestretry({
-                    url: hq_url + PETTY_EXPENDITURE_URL + outlet_id,
-                    timeout: 1500,
-                    method: "POST",
-                    json: {
-                        "data": req.body.data
-                    }
-                },
+                url: hq_url + PETTY_EXPENDITURE_URL + outlet_id,
+                timeout: 1500,
+                method: "POST",
+                json: {
+                    "data": req.body.data
+                }
+            },
                 function (error, response, body) {
                     // if (error || (response && response.statusCode != 200)) {
                     //     console.error('{}: {} {}'.format(hq_url, error, body));
@@ -2619,18 +2631,18 @@ router.post('/staff_roster', function (req, res, next) {
     var STAFF_ROSTER_URL = '/outlet/staff_roster/' + process.env.OUTLET_ID;
 
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             requestretry({
-                    url: process.env.HQ_URL + STAFF_ROSTER_URL,
-                    method: "POST",
-                    forever: true,
-                    json: {
-                        "data": req.body.data
-                    }
-                },
+                url: process.env.HQ_URL + STAFF_ROSTER_URL,
+                method: "POST",
+                forever: true,
+                json: {
+                    "data": req.body.data
+                }
+            },
                 function (error, response, body) {
                     if (error || (response && response.statusCode != 200)) {
                         console.error('{}: {} {}'.format(process.env.HQ_URL, error, body));
@@ -2711,15 +2723,15 @@ router.get('/petty_cash_breakdown', function (req, res, next) {
     console.log('in petty cash funtion time', new Date());
     console.log('##############################');
     internetAvailable({
-            timeout: 100,
-            retries: 3,
-        })
+        timeout: 100,
+        retries: 3,
+    })
         .then(function () {
 
             request({
-                    url: hq_url + PETTY_CASH_URL,
-                    timeout: 1500
-                },
+                url: hq_url + PETTY_CASH_URL,
+                timeout: 1500
+            },
 
                 function (error, response, body) {
                     if (error || (response && response.statusCode != 200)) {
@@ -3107,7 +3119,7 @@ router.post('/save_reconcile_data', function (req, res, next) {
             reconcile_items[index].userid = userid;
         }
 
-        redisClient.lrange(helper.reconcile_summary_node,0,-1, function (error, reconcile_Queue_Items) {
+        redisClient.lrange(helper.reconcile_summary_node, 0, -1, function (error, reconcile_Queue_Items) {
             if (error) {
                 console.log('************************************************');
                 console.log('error', error);
@@ -3139,8 +3151,8 @@ router.post('/save_reconcile_data', function (req, res, next) {
                         console.log('*****************reconcile_Queue_Obj3**************************' + parseInt(reconcile_Queue_Obj.food_item_id));
                         console.log('*****************reconcile_Queue_Obj4**************************' + parseInt(reconcile_items[index].food_item_id));
 
-                        if (parseInt(reconcile_Queue_Obj.po_id) == parseInt(reconcile_items[index].po_id) 
-                        && parseInt(reconcile_Queue_Obj.food_item_id) == parseInt(reconcile_items[index].food_item_id)) {
+                        if (parseInt(reconcile_Queue_Obj.po_id) == parseInt(reconcile_items[index].po_id)
+                            && parseInt(reconcile_Queue_Obj.food_item_id) == parseInt(reconcile_items[index].food_item_id)) {
                             console.log('*************************TRUE***********************************');
                             flag = true;
                         }
@@ -3167,7 +3179,7 @@ router.post('/save_reconcile_data', function (req, res, next) {
                                 reconcileSummaryDetails.expiry = parseInt(reconcile_items[index].expiry_qty);
                                 reconcileSummaryDetails.undelivered = parseInt(reconcile_items[index].undelivered_qty);
                                 reconcileSummaryDetails.restaurant_fault = parseInt(reconcile_items[index].rest_fault_qty);
-                                reconcileSummaryDetails.taken = parseInt(reconcile_items[index].scanned_qty)+ parseInt(reconcile_items[index].unscanned_qty); +parseInt(reconcile_items[index].damaged_qty) + parseInt(reconcile_items[index].expiry_qty); 
+                                reconcileSummaryDetails.taken = parseInt(reconcile_items[index].scanned_qty) + parseInt(reconcile_items[index].unscanned_qty); +parseInt(reconcile_items[index].damaged_qty) + parseInt(reconcile_items[index].expiry_qty);
                                 redisClient.lpush(helper.reconcile_summary_node, JSON.stringify(reconcileSummaryDetails));
                                 reconcile_Queue_Items.push(JSON.stringify(reconcileSummaryDetails));
                             }
@@ -3186,9 +3198,9 @@ router.post('/save_reconcile_data', function (req, res, next) {
         */
 
         internetAvailable({
-                timeout: 1000,
-                retries: 3,
-            })
+            timeout: 1000,
+            retries: 3,
+        })
             .then(function () {
                 console.log('************************************************');
                 console.log('in if condition');
@@ -3278,7 +3290,7 @@ function save_offline_reconsile_info(reconcile_items) {
             for (var i = 0, len = offline_incomming_po[key].length; i < len; i++) {
                 if (offline_incomming_po[key][i]["food_item_id"] == element["food_item_id"]) {
                     offline_incomming_po[key][i].is_offline_reconcile_done = "y"; //jaga marking 
-                    console.log("Marked Po for Reconciled for Po id:"+key);
+                    console.log("Marked Po for Reconciled for Po id:" + key);
                 }
             }
         });
@@ -3301,9 +3313,9 @@ router.get('/check_reconcile_data', function (req, res, next) {
 
     console.log("outlet_app :: check_reconcile_data_url: " + check_reconcile_data_url);
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             // requestretry({
             //     url: check_reconcile_data_url,
@@ -3338,8 +3350,8 @@ router.get('/check_reconcile_data', function (req, res, next) {
 
 
             request(check_reconcile_data_url, {
-                    timeout: 1500
-                },
+                timeout: 1500
+            },
                 function (error, response, result) {
                     if (error || (response && response.statusCode != 200)) {
                         console.log("outlet_app.js :: " + '{}: {} {}'.format(hq_url + check_reconcile_data_url, error, result));
@@ -3747,12 +3759,12 @@ router.post('/send_restautant_excess_mail', function (req, res, next) {
                 pass: 'Atchayam123'
             }
         }, {
-            // default values for sendMail method
-            from: 'no-reply@atchayam.in',
-            headers: {
-                'My-Awesome-Header': '123'
-            }
-        });
+                // default values for sendMail method
+                from: 'no-reply@atchayam.in',
+                headers: {
+                    'My-Awesome-Header': '123'
+                }
+            });
 
         for (var mail_count = 0; mail_count < restaurant_excess_mails.length; mail_count++) {
             console.log("****Restaurant Email Id***" + restaurant_excess_mails[mail_count].restaurant_mail_id);
@@ -3815,12 +3827,12 @@ router.post('/send_pending_reconcile_po_mail', function (req, res, next) {
                 pass: 'Atchayam123'
             }
         }, {
-            // default values for sendMail method
-            from: 'no-reply@atchayam.in',
-            headers: {
-                'My-Awesome-Header': '123'
-            }
-        });
+                // default values for sendMail method
+                from: 'no-reply@atchayam.in',
+                headers: {
+                    'My-Awesome-Header': '123'
+                }
+            });
 
         // Send undelivered items to restaurant
         // TODO - check for semicolon seperated email id's
@@ -3879,8 +3891,8 @@ function get_matrix_code(batch_id) {
     var GET_DATA_MATRIX_URL = '/food_vendor/get_data_matrix/' + batch_id;
     // requesting the HQ to get the staff list
     request(process.env.HQ_URL + GET_DATA_MATRIX_URL, {
-            forever: true
-        },
+        forever: true
+    },
         function (error, response, body) {
             if (error || (response && response.statusCode != 200)) {
                 console.error('{}: {} {}'.format(process.env.HQ_URL, error, body));
@@ -3940,9 +3952,9 @@ function get_matrix_code(batch_id) {
 router.get('/check_internet_connection', function (req, res, next) {
     var hq_url = process.env.HQ_URL;
     internetAvailable({
-            timeout: 1000,
-            retries: 3,
-        })
+        timeout: 1000,
+        retries: 3,
+    })
         .then(function () {
             res.send("true");
         })
@@ -3970,9 +3982,9 @@ router.get('/show_orders', function (req, res, next) {
             return;
         } else {
             internetAvailable({
-                    timeout: 1000,
-                    retries: 3,
-                })
+                timeout: 1000,
+                retries: 3,
+            })
                 .then(function () {
                     requestretry({
                         url: SHOW_ORDER_URL,

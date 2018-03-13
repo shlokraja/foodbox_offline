@@ -23,45 +23,35 @@ var n_month = month[d.getMonth()];
 
 var food_item_data = {};
 
-// checkInternet();
-// //setInterval(checkInternet, 30000);
+checkInternet();
+setInterval(checkInternet, 30000);
 
-// function updateOnlineStatus(event) {
-//     var condition = navigator.onLine ? "online" : "offline";
+function checkInternet() {
 
-//     if (condition == "online") {
-//         console.log('ONLINE!');
-//         $("#internetstatus").removeClass('led-red');
-//         $("#internetstatus").addClass('led-green');
-//     } else {
-//         console.log('Connection flaky');
-//         $("#internetstatus").removeClass('led-green');
-//         $("#internetstatus").addClass('led-red');
-//     }
+$.ajax({
+        type: 'get',
+        url: OUTLET_URL + '/outlet_app/checkInternet',
 
-//   }
-
-window.addEventListener('load', function() {
-
-    function updateOnlineStatus(event) {
-      var condition = navigator.onLine ? "online" : "offline";
+        success: function (data) {
   
-      if (condition == "online") {
-        console.log('ONLINE!');
+		if(data=="true") {
         $("#internetstatus").removeClass('led-red');
         $("#internetstatus").addClass('led-green');
-    } else {
-        console.log('Connection flaky');
+		}
+	else {
         $("#internetstatus").removeClass('led-green');
         $("#internetstatus").addClass('led-red');
     }
   
-    }
-  
-    window.addEventListener('online',  updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
+        },
+        error: function (jqxhr, textStatus, error) {
+        	$("#internetstatus").removeClass('led-green');
+        	$("#internetstatus").addClass('led-red');
+        },
+        contentType: "application/json",
+        dataType: 'text'
 });
+}
 
 $("#btnlogout").click(function () {
     $('#overlay').show();
